@@ -1,0 +1,18 @@
+<package>
+  <description brief="Velodyne ring compression obstacle detection">
+
+    Identify obstacles in Velodyne HDL-64E 3D LIDAR data using a ring
+    compression algorithm.
+
+  </description>
+  <author>Joseph Campbell</author>
+  <license>BSD</license>
+  <review status="experimental" notes=""/>
+  <url>http://www.ros.org/wiki/velodyne_ringcomp</url>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="velodyne_common"/>
+
+</package>
+
+

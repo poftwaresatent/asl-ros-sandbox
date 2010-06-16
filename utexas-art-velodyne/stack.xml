@@ -1,0 +1,16 @@
+<stack>
+  <description brief="Velodyne HDL-64E 3D LIDAR support">
+
+    ROS support for the Velodyne HDL-64E 3D LIDAR.
+
+  </description>
+  <author>Maintained by Jack O'Quin</author>
+  <license>BSD</license>  
+  <review status="experimental" notes=""/>
+  <url>http://ros.org/wiki/velodyne</url>
+  <depend stack="common_msgs" /> <!-- sensor_msgs -->
+  <depend stack="geometry" /> <!-- angles -->
+  <depend stack="ros" /> <!-- roscpp -->
+  <depend stack="visualization" /> <!-- rviz -->
+
+</stack>

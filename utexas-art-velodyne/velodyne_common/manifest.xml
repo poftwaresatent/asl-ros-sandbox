@@ -1,0 +1,24 @@
+<package>
+  <description brief="Common Velodyne HDL-64E 3D LIDAR support">
+
+     Basic device driver, message, header, library and utility
+     interfaces for the Velodyne HDL-64E 3D LIDAR.
+
+  </description>
+  <author> Patrick Beeson, Jack O'Quin, Michael Quinlan, Yaxin Liu </author>
+  <license>BSD</license>
+  <review status="experimental" notes=""/>
+  <url>http://www.ros.org/wiki/velodyne_common</url>
+  <depend package="roscpp"/>
+  <depend package="sensor_msgs"/>
+  <depend package="angles"/>
+
+  <!-- declare build dependency on pcap library -->
+  <rosdep name="libpcap"/>
+
+  <export>
+    <cpp cflags="-I${prefix}/include -I${prefix}/msg/cpp"
+         lflags="-L${prefix}/lib -lvelodyne -lpcap"/>
+  </export>
+
+</package>
