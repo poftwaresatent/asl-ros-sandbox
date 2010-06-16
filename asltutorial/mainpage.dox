@@ -1,0 +1,21 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+<pre>
+
+ * test the hello_server like this:
+   ./bin/hello_server
+   rosservice call /hello_server/say_hello world 10
+
+ * test the go_server like this:
+   ./bin/go_server
+   ./scrpts/mixer.py
+   rostopic echo /go_server/go_command
+
+ * you can also plot the go_command using rxplot:
+   rxplot /go_server/go_command/command
+
+</pre>
+
+*/
