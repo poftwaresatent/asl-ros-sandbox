@@ -125,7 +125,8 @@ namespace velodyne
     InputPCAP(std::string filename="",
               bool read_once=false,
               bool read_fast=false,
-              double repeat_delay=0.0): Input()
+              double repeat_delay=0.0,
+              double packet_delay=0.0): Input()
     {
       filename_ = filename;
       fp_ = NULL;  
@@ -141,6 +142,10 @@ namespace velodyne
       if (repeat_delay_ > 0.0)
         ROS_INFO("Delay %.3f seconds before repeating input file.",
                  repeat_delay_);
+      packet_delay_ = packet_delay;
+      if (packet_delay_ > 0.0)
+        ROS_INFO("Delay %.3f seconds after each packet file.",
+                 packet_delay_);
     }
     ~InputPCAP() {}
 
@@ -158,6 +163,7 @@ namespace velodyne
     bool read_once_;
     bool read_fast_;
     double repeat_delay_;
+    double packet_delay_;
   };
 
 } // velodyne namespace

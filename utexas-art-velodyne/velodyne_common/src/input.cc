@@ -198,7 +198,12 @@ namespace velodyne
             *data_time = ros::Time::now().toSec();
             empty_ = false;
             --result;
-            //ROS_DEBUG("%d Velodyne packets read", i);
+            if (packet_delay_ > 0.0)
+              {
+                ROS_DEBUG("%d Velodyne packets read -- delaying %.3f seconds.",
+			  i, packet_delay_);
+                usleep(rint(packet_delay_ * 1000000.0));
+              }
           }
         else
           {
@@ -257,9 +262,10 @@ namespace velodyne
     private_nh.getParam("read_once", read_once_);
     private_nh.getParam("read_fast", read_fast_);
     private_nh.getParam("repeat_delay", repeat_delay_);
+    private_nh.getParam("packet_delay", packet_delay_);
 
-    ROS_INFO("read_once = %d, read_fast = %d, repeat_delay = %.3f",
-             read_once_, read_fast_, repeat_delay_);
+    ROS_INFO("read_once = %d, read_fast = %d, repeat_delay = %.3f, packet_delay = %.3f",
+             read_once_, read_fast_, repeat_delay_, packet_delay_);
     return 0;
   }
 

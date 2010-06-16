@@ -25,6 +25,7 @@
 static velodyne::Input *input;
 
 // command options
+static bool restampNow = false;	// change timestamp to ros::Time::now()
 static int qDepth = 1;                  // ROS topic queue size
 
 void displayHelp() 
@@ -35,6 +36,7 @@ void displayHelp()
             << std::endl << std::endl
             << "Options:" << std::endl
             << "\t -h, -?          print usage message\n"
+            << "\t -n              restamp packets using ros::Time::now()\n"
             << "\t -q <integer>    set ROS topic queue depth (default: 1)\n"
             << "\t -f <input-file> set PCAP dump input file"
             << std::endl;
@@ -50,7 +52,7 @@ int getParameters(int argc, char *argv[])
   // use getopt to parse the flags
   char ch;
   std::string dump_file = "";
-  const char* optflags = "f:hq:?";
+  const char* optflags = "f:nhq:?";
   while(-1 != (ch = getopt(argc, argv, optflags)))
     {
       switch(ch)
@@ -58,6 +60,9 @@ int getParameters(int argc, char *argv[])
         case 'f':
           dump_file = std::string(optarg);
           break;
+	case 'n':
+	  restampNow = true;
+	  break;
         case 'q':
           qDepth = atoi(optarg);
           if (qDepth < 1)
@@ -143,7 +148,12 @@ int main(int argc, char** argv)
       else
         {
           ROS_DEBUG("Publishing a full Velodyne scan.");
-          rawscan.header.stamp = ros::Time(time);
+	  if (restampNow) {
+	    rawscan.header.stamp = ros::Time::now();
+	  }
+	  else {
+	    rawscan.header.stamp = ros::Time(time);
+	  }
           output.publish(rawscan);
         }
     }

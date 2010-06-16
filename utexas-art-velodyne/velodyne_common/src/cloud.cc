@@ -24,6 +24,7 @@
 using namespace velodyne_common;
 
 // command options
+static bool restampNow = false;	// change timestamp to ros::Time::now()
 static int qDepth = 1;                  // ROS topic queue size
 
 // local static data
@@ -97,6 +98,9 @@ void processXYZ(const std::vector<velodyne::laserscan_xyz_t> &scan)
     }
 
   ROS_DEBUG("Publishing %u Velodyne points.", npoints);
+  if (restampNow) {
+    pc.header.stamp = ros::Time::now();
+  }
   output.publish(pc);
 }
 
@@ -108,6 +112,7 @@ void displayHelp()
             << std::endl
             << "Options:\n"
             << "\t -h, -?       print usage message\n"
+            << "\t -n           re-stamp messages with ros::Time::now()\n"
             << "\t -q <integer> set ROS topic queue depth (default: 1)\n"
             << std::endl
             << "Example:\n"
@@ -124,11 +129,14 @@ int getParameters(int argc, char *argv[])
 {
   // use getopt to parse the flags
   char ch;
-  const char* optflags = "hq:?";
+  const char* optflags = "hnq:?";
   while(-1 != (ch = getopt(argc, argv, optflags)))
     {
       switch(ch)
         {
+	case 'n':
+	  restampNow = true;
+	  break;
         case 'q':
           qDepth = atoi(optarg);
           if (qDepth < 1)
