@@ -1,0 +1,19 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b tpcloud is a tool for testing your point cloud visualization etc
+
+\section cube Cube in rviz
+<verbatim>
+* roscd tpcloud
+  - ./bin/pcloudgen
+* roscd tf
+  - ./bin/static_transform_publisher 0 0 0 0 0 0 /world /cube 100
+* rosrun rviz rviz
+  - fixed and target frame "/world"
+  - add Point Cloud visualization
+  - topic "/pcloudgen/cube"
+</verbatim>
+
+*/

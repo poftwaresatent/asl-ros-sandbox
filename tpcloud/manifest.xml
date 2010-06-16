@@ -1,0 +1,16 @@
+<package>
+  <description brief="tpcloud">
+
+     tpcloud
+
+  </description>
+  <author>Roland Philippsen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/tpcloud</url>
+  <depend package="sensor_msgs"/>
+<!--  <depend package="rospy"/> -->
+  <depend package="roscpp"/>
+  <depend package="eigen"/>
+
+</package>
