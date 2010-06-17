@@ -36,6 +36,7 @@ static void execute_goto(double depth, double speed, Server* as)
     fb.depth = current_depth;
     as->publishFeedback(fb);
     
+    usleep(100000);
   }
   
   current_depth = depth;
@@ -59,7 +60,6 @@ static void execute_ready(Server* as)
 
 void execute(const winch_action::WinchTargetGoalConstPtr& goal, Server* as)
 {
-  
   switch (goal->mode) {
   case winch_action::WinchTargetGoal::MODE_PARK:
     execute_park(as);
