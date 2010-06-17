@@ -86,7 +86,7 @@ void execute(const winch_action::WinchTargetGoalConstPtr& goal, Server* as)
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "winch_server");
+  ros::init(argc, argv, "winch_simple_server");
   ros::NodeHandle nn;
   dbg_pub = nn.advertise<winch_action::Debug>("dbg", 1);
   Server server(nn, "winch", boost::bind(&execute, _1, &server));
