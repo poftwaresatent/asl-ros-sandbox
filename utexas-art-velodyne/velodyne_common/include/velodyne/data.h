@@ -116,15 +116,6 @@ namespace velodyne
     uint8_t status[PACKET_STATUS_SIZE]; 
   } raw_packet_t;
 
-  /** \brief Correction angles for a specific HDL-64E device. */
-  struct correction_angles
-  {
-    float rotational;
-    float vertical;
-    float offset1, offset2, offset3;
-    int   enabled;
-  };
-
   /** \brief type of callback function to receive raw data for one revolution.
    *
    * \param raw -> buffer containing raw packet contents
@@ -260,13 +251,8 @@ namespace velodyne
 
     /** latest raw scan message received */
     velodyne_common::RawScan::ConstPtr rawScan_;
-
-    /** correction angles indexed by laser within bank
-     *
-     * \todo combine them into a single array, lower followed by upper
-     */
-    correction_angles lower_[SCANS_PER_BLOCK];
-    correction_angles upper_[SCANS_PER_BLOCK];
+    
+    Calibration * calibration_;
   };
 
 
