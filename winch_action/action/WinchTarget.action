@@ -1,0 +1,14 @@
+uint32 MODE_PARK = 1
+uint32 MODE_READY = 2
+uint32 MODE_GOTO = 3
+uint32 mode
+float64 depth
+float64 speed
+---
+float64 depth
+---
+uint32 STATE_ACTIVE = 1
+uint32 STATE_PAUSED = 2
+uint32 state
+float64 depth
+float64 speed

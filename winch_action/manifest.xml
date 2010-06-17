@@ -1,0 +1,18 @@
+<package>
+  <description brief="winch_action">
+
+     winch_action
+
+  </description>
+  <author>Roland Philippsen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/winch_action</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="actionlib_msgs"/>
+  <depend package="actionlib"/>
+
+</package>
+
+
