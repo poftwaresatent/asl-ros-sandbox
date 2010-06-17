@@ -32,6 +32,6 @@ rosbuild_genmsg()
 #rosbuild_link_boost(${PROJECT_NAME} thread)
 
 rosbuild_add_executable(winch_client src/winch_client.cpp)
-#rosbuild_add_executable(winch_server src/winch_server.cpp)
+rosbuild_add_executable(winch_server src/winch_server.cpp)
 
 #target_link_libraries(example ${PROJECT_NAME})
