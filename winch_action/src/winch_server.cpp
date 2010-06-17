@@ -5,65 +5,84 @@
 typedef actionlib::SimpleActionServer<winch_action::WinchTargetAction> Server;
 
 static double current_depth(0);
-static double target_depth(0);
 static ros::Publisher dbg_pub;
 
 
-void execute(const winch_action::WinchTargetGoalConstPtr& goal, Server* as)
+static void execute_goto(double depth, double speed, Server* as)
 {
   winch_action::WinchTargetResult result;
   result.depth = current_depth;
   
-  switch (goal->mode) {
-  case winch_action::WinchTargetGoal::MODE_PARK:
-    break;
-  case winch_action::WinchTargetGoal::MODE_READY:
-    break;
-
-  case winch_action::WinchTargetGoal::MODE_GOTO:
-    if (goal->speed <= 0) {
-      as->setRejected(result, "invalid speed");
-      return;
-    }
-    if (goal->depth <= 0) {
-      as->setRejected(result, "invalid depth");
-      return;
-    }
-    if (fabs(current_depth - target_depth) < goal->speed) {
-      current_depth = target_depth;
+  if (speed <= 0) {
+    as->setRejected(result, "invalid speed");
+    return;
+  }
+  
+  winch_action::WinchTargetFeedback fb;
+  fb.state = winch_action::WinchTargetFeedback::STATE_ACTIVE;
+  fb.depth = current_depth;
+  fb.speed = speed;
+  as->publishFeedback(fb);
+  
+  while (fabs(current_depth - depth) > speed) {
+    
+    if (current_depth > depth) {
+      current_depth -= speed;
     }
     else {
-      if (current_depth > target_depth) {
-	current_depth -= goal->speed;
-      }
-      else {
-	current_depth += goal->speed;
-      }
+      current_depth += speed;
     }
-    {
-      winch_action::Debug dbg;
-      dbg.depth = current_depth;
-    }
+    
+    fb.depth = current_depth;
+    as->publishFeedback(fb);
+    
+  }
+  
+  current_depth = depth;
+  
+  result.depth = current_depth;
+  as->setSucceeded(result, "Yeah!");
+}
+
+
+static void execute_park(Server* as)
+{
+  execute_goto(-1, 0.1, as);
+}
+
+
+static void execute_ready(Server* as)
+{
+  execute_goto(0, 0.5, as);
+}
+
+
+void execute(const winch_action::WinchTargetGoalConstPtr& goal, Server* as)
+{
+  
+  switch (goal->mode) {
+  case winch_action::WinchTargetGoal::MODE_PARK:
+    execute_park(as);
+    break;
+    
+  case winch_action::WinchTargetGoal::MODE_READY:
+    execute_ready(as);
+    break;
+    
+  case winch_action::WinchTargetGoal::MODE_GOTO:
+    execute_goto(goal->depth, goal->speed, as);
     break;
     
   default:
     {
+      winch_action::WinchTargetResult result;
+      result.depth = current_depth;
       as->setRejected(result, "invalid mode");
       return;
     }
   }
-  
-  if (fabs(current_depth - target_depth) < 1e-2) {
-    as->setSucceeded(result, "Yeah!");
-  }
-  else {
-    winch_action::WinchTargetFeedback fb;
-    fb.state = winch_action::WinchTargetFeedback::STATE_ACTIVE; //uint32 STATE_PAUSED = 2
-    fb.depth = current_depth;
-    fb.speed = goal->speed;
-    as->publishFeedback(fb);
-  }
 }
+
 
 int main(int argc, char** argv)
 {
