@@ -39,10 +39,12 @@ static bool update_goto(double depth, double speed)
   fb.depth = current_depth;
   fb.speed = speed;
   goal_handle.publishFeedback(fb);
+  ROS_INFO("Probe pos is at %f m depth, moving at %f m/s", current_depth, speed);
   
   if (fabs(current_depth - depth) <= speed) {
     result.depth = current_depth;
     goal_handle.setSucceeded(result, "Yeah!");
+    ROS_INFO("Probe has reached its goal");
     return false;
   }
   
@@ -87,42 +89,35 @@ static void cancel_cb(server_t::GoalHandle gh)
   goal_handle.setCanceled();
 }
 
-
-static void hacked_update_loop()
+static void update_step(const ros::TimerEvent& timer_event)
 {
-  while (ros::ok()) {
-    ros::spinOnce();
+  if ( ! have_goal)
+    return;
+  
+  switch (goal_handle.getGoal()->mode) {
+  case winch_action::WinchTargetGoal::MODE_PARK:
+    ROS_INFO("Probe parking");
+    have_goal = update_park();
+    break;
     
-    if ( ! have_goal) {
-      usleep(100000);		// don't do this on the real robot
-      continue;
-    }
+  case winch_action::WinchTargetGoal::MODE_READY:
+    ROS_INFO("Probe readying");
+    have_goal = update_ready();
+    break;
     
-    switch (goal_handle.getGoal()->mode) {
-    case winch_action::WinchTargetGoal::MODE_PARK:
-      have_goal = update_park();
-      break;
-      
-    case winch_action::WinchTargetGoal::MODE_READY:
-      have_goal = update_ready();
-      break;
-      
-    case winch_action::WinchTargetGoal::MODE_GOTO:
-      have_goal = update_goto(goal_handle.getGoal()->depth, goal_handle.getGoal()->speed);
-      break;
-      
-    default:
-      {
-	winch_action::WinchTargetResult result;
-	result.depth = current_depth;
-	goal_handle.setRejected(result, "invalid mode");
-	have_goal = false;
-      }
-      
-    }
+  case winch_action::WinchTargetGoal::MODE_GOTO:
+    ROS_INFO("Probe goto");
+    have_goal = update_goto(goal_handle.getGoal()->depth, goal_handle.getGoal()->speed);
+    break;
     
-    usleep(100000);		// don't do this on the real robot
-    
+  default:
+    {
+      ROS_INFO("Invalid probe mode");
+      winch_action::WinchTargetResult result;
+      result.depth = current_depth;
+      goal_handle.setRejected(result, "invalid mode");
+      have_goal = false;
+    } 
   }
 }
 
@@ -131,7 +126,8 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "winch_server");
   ros::NodeHandle nn;
+  ros::Timer timer = nn.createTimer(ros::Duration(0.1), update_step);
   action_server.reset(new server_t(nn, "winch", goal_cb, cancel_cb));
-  hacked_update_loop();
+  ros::spin();
   return 0;
 }
