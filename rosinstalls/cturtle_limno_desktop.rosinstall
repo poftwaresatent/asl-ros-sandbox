@@ -1,0 +1,7 @@
+- svn: {local-name: ros, uri: 'https://code.ros.org/svn/ros/stacks/ros/tags/cturtle'}
+- svn: {local-name: stacks/common, uri: 'https://code.ros.org/svn/ros-pkg/stacks/common/tags/cturtle'}
+- svn: {local-name: stacks/common_msgs, uri: 'https://code.ros.org/svn/ros-pkg/stacks/common_msgs/tags/cturtle'}
+- svn: {local-name: stacks/driver_common, uri: 'https://code.ros.org/svn/ros-pkg/stacks/driver_common/tags/cturtle'}
+- svn: {local-name: stacks/geometry, uri: 'https://code.ros.org/svn/ros-pkg/stacks/geometry/tags/cturtle'}
+- svn: {local-name: stacks/visualization, uri: 'https://code.ros.org/svn/ros-pkg/stacks/visualization/tags/cturtle'}
+- svn: {local-name: stacks/visualization_common, uri: 'https://code.ros.org/svn/ros-pkg/stacks/visualization_common/tags/cturtle'}
