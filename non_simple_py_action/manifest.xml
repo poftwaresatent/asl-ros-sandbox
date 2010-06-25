@@ -1,0 +1,17 @@
+<package>
+  <description brief="non_simple_py_action">
+
+     non_simple_py_action
+
+  </description>
+  <author>Roland Philippsen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/non_simple_py_action</url>
+  <depend package="rospy"/>
+  <depend package="actionlib_msgs"/>
+  <depend package="actionlib"/>
+
+</package>
+
+
