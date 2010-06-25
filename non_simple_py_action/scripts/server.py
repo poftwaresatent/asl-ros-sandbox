@@ -18,30 +18,45 @@ class CountActionServer (actionlib.action_server.ActionServer):
         self.counter = dict()
         
     def goalCallback(self, gh):
-        goal = gh.get_goal()
-        if goal.begin == goal.end:
-            rospy.loginfo('invalid goal: from %d to %d' % (goal.begin, goal.end))
-            gh.set_rejected()
-        else:
-            rospy.loginfo('new goal: from %d to %d' % (goal.begin, goal.end))
-            gh.set_accepted()
-            self.counter[gh] = goal.begin
-        
+        try:
+            goal = gh.get_goal()
+            if goal.begin == goal.end:
+                rospy.loginfo('invalid goal: from %d to %d' % (goal.begin, goal.end))
+                gh.set_rejected()
+            else:
+                rospy.loginfo('new goal: from %d to %d' % (goal.begin, goal.end))
+                gh.set_accepted()
+                self.counter[gh.get_goal_id().id] = (gh, goal.begin)
+        except Exception, ee:
+            rospy.logerr('OOPS in goalCallback: %s' % ee)
+        except:
+            rospy.logerr('unknown exception in goalCallback')
+
     def cancelCallback(self, gh):
-        goal = gh.get_goal()
-        rospy.loginfo('canceled: from %d to %d (at %d)' % (goal.begin, goal.end, self.counter[gh]))
-        del self.counter[gh]
+        try:
+            goal = gh.get_goal()
+            id = gh.get_goal_id()
+            rospy.loginfo('canceled: from %d to %d (at %d)' % (goal.begin, goal.end, self.counter[id][1]))
+            del self.counter[id]
+        except Exception, ee:
+            rospy.logerr('OOPS in cancelCallback: %s' % ee)
+        except:
+            rospy.logerr('unknown exception in cancelCallback')
         
     def update(self):
         rospy.loginfo('updating %d counters' % len(self.counter))
+        upd = dict()
         tbr = list()
-        for (gh, counter) in self.counter:
+        for ii in self.counter.itervalues():
+            (gh, counter) = ii
+            id = gh.get_goal_id()
             goal = gh.get_goal()
             if goal.begin < goal.end:
                 counter += 1
             else:
                 counter -= 1
                 rospy.loginfo('  updated: from %d to %d at %d' % (goal.begin, goal.end, counter))
+            upd[id] = counter
             feedback = non_simple_py_action.msg.CountFeedback(current = counter)
             gh.publish_feedback(feedback)
             if counter == goal.end:
@@ -49,9 +64,11 @@ class CountActionServer (actionlib.action_server.ActionServer):
                 result = non_simple_py_action.msg.CountResult(magic = goal.begin + goal.end)
                 gh.publish_result(result)
                 gh.set_succeeded()
-                tbr += gh
-        for gh in tbr:
-            del self.counter[gh]
+                tbr += id
+        for (id, counter) in upd.iteritems():
+            self.counter[id][1] = counter
+        for id in tbr:
+            del self.counter[id]
 
 if __name__ == '__main__':
     rospy.init_node('count_server')
