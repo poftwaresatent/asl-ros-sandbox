@@ -2,6 +2,7 @@
 
 import sys
 import os
+import threading
 import roslib
 roslib.load_manifest('non_simple_py_action')
 
@@ -9,10 +10,21 @@ import rospy
 import actionlib
 import non_simple_py_action.msg
 
+
+class Spinner(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        self.daemon = True
+
+    def run(self):
+        rospy.spin()
+
+
 class CountActionClient (actionlib.action_client.ActionClient):
     def __init__(self, name):
         rospy.loginfo('Creating CountActionClient %s' % name)
-        actionlib.action_client.ActionClient.__init__(self, name, non_simple_py_action.msg.CountAction)
+        actionlib.action_client.ActionClient.__init__(self, name, \
+                              non_simple_py_action.msg.CountAction)
         self.counter = dict()
         self.started = False
 
@@ -42,15 +54,9 @@ class CountActionClient (actionlib.action_client.ActionClient):
 
 if __name__ == '__main__':
     rospy.init_node('count_client')
+    rospy.loginfo('starting spinner thread')
+    spinner = Spinner()
+    spinner.start()
+    rospy.loginfo('starting action client')
     cac = CountActionClient('count')
-    cac.spawn(0, 100)
-    rospy.Rate(2).sleep()
-    cac.spawn(100, -100)
-    cac.spawn(0, 10)
-    rospy.Rate(0.5).sleep()
-    cac.spawn(900, 1100)
-    cac.spawn(0, 10)
-    cac.spawn(0, 10)
-    cac.spawn(0, 10)
-    cac.spawn(0, 10)
-    rospy.spin()
+    cac.spawn(0, 20)
