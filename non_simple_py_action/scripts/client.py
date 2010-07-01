@@ -2,22 +2,12 @@
 
 import sys
 import os
-import threading
 import roslib
 roslib.load_manifest('non_simple_py_action')
 
 import rospy
 import actionlib
 import non_simple_py_action.msg
-
-
-class Spinner(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.daemon = True
-
-    def run(self):
-        rospy.spin()
 
 
 class CountActionClient (actionlib.action_client.ActionClient):
@@ -44,19 +34,18 @@ class CountActionClient (actionlib.action_client.ActionClient):
     def transition_cb(self, gh):
         goal = gh.get_goal()
         status = gh.get_goal_status()
-        rospy.loginfo('transition %s: from %d to %d' % (status, goal.begin, goal.end))
+        rospy.loginfo('transition %s: from %d to %d'
+                      % (status, goal.begin, goal.end))
         if actionlib.action_client.GoalStatus.SUCCEEDED == status:
             rospy.loginfo('  magic %d' % gh.get_result)
             
     def feedback_cb(self, gh, msg):
         goal = gh.get_goal()
-        rospy.loginfo('feedback: from %d to %d at %d' % (goal.begin, goal.end, msg.current))
+        rospy.loginfo('feedback: from %d to %d at %d'
+                      % (goal.begin, goal.end, msg.current))
 
 if __name__ == '__main__':
     rospy.init_node('count_client')
-    rospy.loginfo('starting spinner thread')
-    spinner = Spinner()
-    spinner.start()
-    rospy.loginfo('starting action client')
     cac = CountActionClient('count')
-    cac.spawn(0, 20)
+    cac.spawn(0, 50)
+    rospy.spin()
