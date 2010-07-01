@@ -1,8 +1,8 @@
-#include <non_simple_py_action/CountAction.h>
+#include <non_simple_action/CountAction.h>
 #include <actionlib/client/simple_action_client.h>
 #include <err.h>
 
-typedef actionlib::SimpleActionClient<non_simple_py_action::CountAction> Client;
+typedef actionlib::SimpleActionClient<non_simple_action::CountAction> Client;
 
 int main(int argc, char** argv)
 {
@@ -13,7 +13,7 @@ int main(int argc, char** argv)
   client.waitForServer();
 
   warnx("sending goal");
-  non_simple_py_action::CountGoal goal;
+  non_simple_action::CountGoal goal;
   goal.begin = -10;
   goal.end = 10;
   client.sendGoal(goal);

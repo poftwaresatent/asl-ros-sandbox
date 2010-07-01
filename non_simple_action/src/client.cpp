@@ -1,11 +1,11 @@
-#include <non_simple_py_action/CountAction.h>
+#include <non_simple_action/CountAction.h>
 #include <actionlib/client/action_client.h>
 #include <err.h>
 
 
-typedef actionlib::ActionClient<non_simple_py_action::CountAction> Client;
+typedef actionlib::ActionClient<non_simple_action::CountAction> Client;
 typedef boost::function<void (Client::GoalHandle) > TransitionCallback;
-typedef boost::shared_ptr<const non_simple_py_action::CountFeedback> FeedbackConstPtr;
+typedef boost::shared_ptr<const non_simple_action::CountFeedback> FeedbackConstPtr;
 typedef boost::function<void (Client::GoalHandle, const FeedbackConstPtr &) > FeedbackCallback;
 
 
@@ -32,7 +32,7 @@ int main(int argc, char** argv)
   }
   
   warnx("sending goal");
-  non_simple_py_action::CountGoal goal;
+  non_simple_action::CountGoal goal;
   goal.begin = -10;
   goal.end = 10;
   Client::GoalHandle gh(client.sendGoal(goal));

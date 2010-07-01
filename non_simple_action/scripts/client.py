@@ -3,18 +3,18 @@
 import sys
 import os
 import roslib
-roslib.load_manifest('non_simple_py_action')
+roslib.load_manifest('non_simple_action')
 
 import rospy
 import actionlib
-import non_simple_py_action.msg
+import non_simple_action.msg
 
 
 class CountActionClient (actionlib.action_client.ActionClient):
     def __init__(self, name):
         rospy.loginfo('Creating CountActionClient %s' % name)
         actionlib.action_client.ActionClient.__init__(self, name, \
-                              non_simple_py_action.msg.CountAction)
+                              non_simple_action.msg.CountAction)
         self.counter = dict()
         self.started = False
 
@@ -27,7 +27,7 @@ class CountActionClient (actionlib.action_client.ActionClient):
             else:
                 rospy.loginfo('...FAILED to start server')
                 return False
-        goal = non_simple_py_action.msg.CountGoal(begin = begin, end = end)
+        goal = non_simple_action.msg.CountGoal(begin = begin, end = end)
         self.send_goal(goal, self.transition_cb, self.feedback_cb)
         return True
         
