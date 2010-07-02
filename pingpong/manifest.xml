@@ -1,0 +1,15 @@
+<package>
+  <description brief="pingpong">
+
+     pingpong lets you explore how ROS reacts to unreliable networking
+
+  </description>
+  <author>Roland Philippsen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pingpong</url>
+  <depend package="roscpp"/>
+
+</package>
+
+
