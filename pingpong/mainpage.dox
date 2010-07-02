@@ -2,25 +2,26 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b pingpong is ... 
+Tool for playing around with unreliable networking in ROS.
 
-<!-- 
-Provide an overview of your package.
--->
+<verbatim>
+ * the "ping" side sends incrementing sequence numbers:
+   ./bin/pingpong
+ * the "pong" side gets the pings and sends back the same sequence number:
+   ./bin/pingpong -o
 
+Both sides publish stats which summarize the difference between sent
+and received sequence numbers. The pong side only sends the stats
+about the delta between sequence numbers from consecutive messages, to
+detect when we miss a message.
+ * rostopic echo /pingstat
+ * rostopic echo /pongstat
 
-\section codeapi Code API
-
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
-
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
-
+The idea is to run them on different machines, disconnect the network
+cable, reconnect it, and see how things behave on both sides. The
+pingpong utility takes various options to control e.g. whether it
+should use TCP or UDP (default is UDP) and how frequently to run the
+update function. See ./bin/pingpong -h for help.
+</verbatim>
 
 */
