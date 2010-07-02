@@ -21,8 +21,11 @@ static size_t counter;
 static std::vector<uint8_t> data;
 static size_t nrcv;
 static size_t prevseq;
+static size_t dc;
+static size_t dcmax;
+static size_t dcsum;
+static double dcmean;
 static size_t ds;
-static size_t dsmin;
 static size_t dsmax;
 static size_t dssum;
 static double dsmean;
@@ -45,7 +48,7 @@ static void usage(bool ok)
 	  "\t-b\tbacklog\tnumber of messages to keep in queues\n"
 	  "defaults:\n"
 	  "  data size %zu bytes\n"
-	  "  update rate %f Hz\n"
+	  "  update rate %4.1f Hz\n"
 	  "  backlog %zu messages\n",
 	  default_data_size, default_update_rate, default_queue_size);
   
@@ -56,23 +59,50 @@ static void usage(bool ok)
 static void update(ros::TimerEvent const & timer_event)
 {
   if (pong_mode) {
-    /* nop */
+    dc = 0;
+    dcmax = 0;
+    dcmean = 0;
+    dcsum = 0;
+    if (0 == nrcv) {
+      ds = 0;
+      dsmax = 0;
+      dsmean = 0;
+      dssum = 0;
+    }
   }
   else {
     pingpong::PingPong pmsg;
     pmsg.seq = counter;
     pmsg.data = data;
     pingpong_pub.publish(pmsg);
+    if (0 == nrcv) {
+      dc = 0;
+      dcmax = 0;
+      dcmean = 0;
+      dcsum = 0;
+      ds = 0;
+      dsmax = 0;
+      dsmean = 0;
+      dssum = 0;
+    }
+    else {
+      dc = counter - prevseq;
+      if (dc > dcmax) {
+	dcmax = dc;
+      }
+      dcsum += dc;
+      dcmean = dcsum * 1.0 / counter;
+    }
   }
   
-  if (0 < nrcv) {
-    pingpong::Status smsg;
-    smsg.ds = ds;
-    smsg.dsmin = dsmin;
-    smsg.dsmax = dsmax;
-    smsg.dsmean = dsmean;
-    status_pub.publish(smsg);
-  }
+  pingpong::Status smsg;
+  smsg.dc = dc;
+  smsg.dcmax = dcmax;
+  smsg.dcmean = dcmean;
+  smsg.ds = ds;
+  smsg.dsmax = dsmax;
+  smsg.dsmean = dsmean;
+  status_pub.publish(smsg);
   
   ++counter;
 }
@@ -86,7 +116,6 @@ static void msg_cb(boost::shared_ptr<pingpong::PingPong const> const & msg)
     pmsg.data = data;
     pingpong_pub.publish(pmsg);
     
-    prevseq = msg->seq;
     if (0 == nrcv) {
       ds = 1;
     }
@@ -99,23 +128,21 @@ static void msg_cb(boost::shared_ptr<pingpong::PingPong const> const & msg)
   }
   
   if (0 == nrcv) {
-    dsmin = ds;
     dsmax = ds;
     dssum = ds;
     dsmean = ds;
   }
   else {
     dssum += ds;
-    if (ds < dsmin) {
-      dsmin = ds;
-    }
     if (ds > dsmax) {
       dsmax = ds;
     }
+    dssum += ds;
     dsmean = dssum * 1.0 / nrcv;
   }
   
   ++nrcv;
+  prevseq = msg->seq;
 }
 
 
