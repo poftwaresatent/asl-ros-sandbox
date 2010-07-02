@@ -21,13 +21,15 @@ static size_t counter;
 static std::vector<uint8_t> data;
 static size_t nrcv;
 static size_t prevseq;
-static size_t dc;
-static size_t dcmax;
-static size_t dcsum;
+static ssize_t dc;
+static ssize_t dcmin;
+static ssize_t dcmax;
+static ssize_t dcsum;
 static double dcmean;
-static size_t ds;
-static size_t dsmax;
-static size_t dssum;
+static ssize_t ds;
+static ssize_t dsmin;
+static ssize_t dsmax;
+static ssize_t dssum;
 static double dsmean;
 
 
@@ -60,11 +62,13 @@ static void update(ros::TimerEvent const & timer_event)
 {
   if (pong_mode) {
     dc = 0;
+    dcmin = 0;
     dcmax = 0;
     dcmean = 0;
     dcsum = 0;
     if (0 == nrcv) {
       ds = 0;
+      dsmin = 0;
       dsmax = 0;
       dsmean = 0;
       dssum = 0;
@@ -77,16 +81,21 @@ static void update(ros::TimerEvent const & timer_event)
     pingpong_pub.publish(pmsg);
     if (0 == nrcv) {
       dc = 0;
+      dcmin = 0;
       dcmax = 0;
       dcmean = 0;
       dcsum = 0;
       ds = 0;
+      dsmin = 0;
       dsmax = 0;
       dsmean = 0;
       dssum = 0;
     }
     else {
       dc = counter - prevseq;
+      if (dc < dcmin) {
+	dcmin = dc;
+      }
       if (dc > dcmax) {
 	dcmax = dc;
       }
@@ -97,9 +106,11 @@ static void update(ros::TimerEvent const & timer_event)
   
   pingpong::Status smsg;
   smsg.dc = dc;
+  smsg.dcmin = dcmin;
   smsg.dcmax = dcmax;
   smsg.dcmean = dcmean;
   smsg.ds = ds;
+  smsg.dsmin = dsmin;
   smsg.dsmax = dsmax;
   smsg.dsmean = dsmean;
   status_pub.publish(smsg);
@@ -128,12 +139,16 @@ static void msg_cb(boost::shared_ptr<pingpong::PingPong const> const & msg)
   }
   
   if (0 == nrcv) {
+    dsmin = ds;
     dsmax = ds;
     dssum = ds;
     dsmean = ds;
   }
   else {
     dssum += ds;
+    if (ds < dsmin) {
+      dsmin = ds;
+    }
     if (ds > dsmax) {
       dsmax = ds;
     }

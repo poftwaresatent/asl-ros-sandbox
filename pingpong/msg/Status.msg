@@ -1,7 +1,9 @@
-uint64 dc
-uint64 dcmax
-uint64 dcmean
+int64 dc
+int64 dcmin
+int64 dcmax
+int64 dcmean
 
-uint64 ds
-uint64 dsmax
-uint64 dsmean
+int64 ds
+int64 dsmin
+int64 dsmax
+int64 dsmean
