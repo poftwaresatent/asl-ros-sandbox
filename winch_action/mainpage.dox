@@ -2,25 +2,34 @@
 \mainpage
 \htmlinclude manifest.html
 
-\b winch_action is ... 
+<pre>
 
-<!-- 
-Provide an overview of your package.
--->
+ * src/winch_simple_server.cpp simple C++ action server that pretends
+   to be the winch that hauls the probe up and down on the limnobotics
+   boat. If you need an action server that is not much more than a
+   service call, i.e. it blocks while the goal is running and only
+   accepts one goal at a time, than this is a good starting
+   point. Qualitatively, the only difference with respect to a service
+   call is the possibility to regularly send feedback to the client.
 
+ * src/winch_server.cpp a more complete C++ action server example that
+   also pretends to be a winch hauling a probe up and down. It is
+   based on a timer that implements a little state machine, and if it
+   receives a new goal while pursuing an older one, the latter gets
+   canceled (preempted).
 
-\section codeapi Code API
+ * src/winch_client.cpp very simple C++ action client that sends a
+   single fixed goal to the server and waits for it to finish. Just to
+   illustrate the basic structure of a simple action client,
+   essentially copy-pasted from the ROS tutorials.
 
-<!--
-Provide links to specific auto-generated API documentation within your
-package that is of particular interest to a reader. Doxygen will
-document pretty much every part of your code, so do your best here to
-point the reader to the actual API.
+ * scripts/winch_client.py Python GUI based on Tix, acts as action
+   client that talks to a winch action server. You can launch several
+   winch_client.py and use them to try and send more than one goal to
+   the server. Depending on whether you are running the simple or
+   non-simple server, this should lead either to blocking until the
+   current goal has been achieved, or preemption of the current goal.
 
-If your codebase is fairly large or has different sets of APIs, you
-should use the doxygen 'group' tag to keep these APIs together. For
-example, the roscpp documentation has 'libros' group.
--->
-
+</pre>
 
 */

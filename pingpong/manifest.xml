@@ -7,7 +7,7 @@
   <author>Roland Philippsen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/pingpong</url>
+  <url>http://github.com/poftwaresatent/asl-ros-sandbox</url>
   <depend package="roscpp"/>
 
 </package>

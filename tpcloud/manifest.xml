@@ -1,13 +1,15 @@
 <package>
   <description brief="tpcloud">
 
-     tpcloud
+    A tool for testing your point cloud visualization. It is
+    essentially aimed at debugging your rviz setup, by sending 3D
+    point clouds whose shape is known.
 
   </description>
   <author>Roland Philippsen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/tpcloud</url>
+  <url>http://github.com/poftwaresatent/asl-ros-sandbox</url>
   <depend package="sensor_msgs"/>
 <!--  <depend package="rospy"/> -->
   <depend package="roscpp"/>

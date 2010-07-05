@@ -1,13 +1,15 @@
 <package>
   <description brief="winch_action">
 
-     winch_action
+    Actionlib server and client code written with Stephane Magnenat
+    during a one-day hackathon to learn actionlib in order to apply it
+    to the limnobotics project with Gregory Hitz.
 
   </description>
   <author>Roland Philippsen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/winch_action</url>
+  <url>http://github.com/poftwaresatent/asl-ros-sandbox</url>
   <depend package="roscpp"/>
   <depend package="rospy"/>
   <depend package="actionlib_msgs"/>

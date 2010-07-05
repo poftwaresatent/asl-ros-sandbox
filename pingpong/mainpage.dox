@@ -4,7 +4,8 @@
 
 Tool for playing around with unreliable networking in ROS.
 
-<verbatim>
+<pre>
+
  * the "ping" side sends incrementing sequence numbers:
    ./bin/pingpong
  * the "pong" side gets the pings and sends back the same sequence number:
@@ -22,6 +23,7 @@ cable, reconnect it, and see how things behave on both sides. The
 pingpong utility takes various options to control e.g. whether it
 should use TCP or UDP (default is UDP) and how frequently to run the
 update function. See ./bin/pingpong -h for help.
-</verbatim>
+
+</pre>
 
 */

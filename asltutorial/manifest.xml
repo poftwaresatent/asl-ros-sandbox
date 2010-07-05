@@ -1,13 +1,14 @@
 <package>
   <description brief="asltutorial">
 
-     asltutorial
+     ROS examples used for a high-level walkthrough of ROS at the
+     Autonomous Systems Lab, ETH Zurich.
 
   </description>
   <author>Roland Philippsen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/asltutorial</url>
+  <url>http://github.com/poftwaresatent/asl-ros-sandbox</url>
   <depend package="std_msgs"/>
   <depend package="rospy"/>
   <depend package="roscpp"/>

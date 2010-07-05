@@ -1,13 +1,14 @@
 <package>
   <description brief="non_simple_action">
 
-     non_simple_action
+    Exploring the possibilities and limits of non-simple action
+    servers and clients, in Python and C++.
 
   </description>
   <author>Roland Philippsen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/non_simple_action</url>
+  <url>http://github.com/poftwaresatent/asl-ros-sandbox</url>
   <depend package="rospy"/>
   <depend package="actionlib_msgs"/>
   <depend package="actionlib"/>
