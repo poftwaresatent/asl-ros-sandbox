@@ -116,6 +116,15 @@ namespace velodyne
     uint8_t status[PACKET_STATUS_SIZE]; 
   } raw_packet_t;
 
+  /** \brief Correction angles for a specific HDL-64E device. */
+  struct correction_angles
+  {
+    float rotational;
+    float vertical;
+    float offset1, offset2, offset3;
+    int   enabled;
+  };
+
   /** \brief type of callback function to receive raw data for one revolution.
    *
    * \param raw -> buffer containing raw packet contents
@@ -125,24 +134,21 @@ namespace velodyne
    * time stamp, sequence number, and frame ID.
    */
   typedef void (*raw_callback_t)(const raw_packet_t *raw, size_t npackets);
-  
-  class Calibration;
-  
+
   /** \brief Base Velodyne data class -- not used directly. */
   class Data
   {
   public:
     Data(std::string ofile="",
-         std::string anglesFile="",
-	 std::string anglesFormat="ART")
+         std::string anglesFile="")
       {
         ofile_ = ofile;
         anglesFile_ = anglesFile;
-        anglesFormat_ = anglesFormat;
 
         ofp_ = NULL;
         rawCB_ = NULL;
-	calibration_ = NULL;
+        memset(&upper_, 0, sizeof(upper_));
+        memset(&lower_, 0, sizeof(lower_));
       }
 
     virtual ~Data() {}
@@ -246,7 +252,6 @@ namespace velodyne
     /** configuration parameters */
     std::string ofile_;                 ///< output file name for print()
     std::string anglesFile_;            ///< correction angles file name
-    std::string anglesFormat_;		///< format of angles file ("ART" or "ASL" for now)
 
     /** runtime state */
     FILE *ofp_;                         ///< output file descriptor
@@ -255,8 +260,13 @@ namespace velodyne
 
     /** latest raw scan message received */
     velodyne_common::RawScan::ConstPtr rawScan_;
-    
-    Calibration * calibration_;
+
+    /** correction angles indexed by laser within bank
+     *
+     * \todo combine them into a single array, lower followed by upper
+     */
+    correction_angles lower_[SCANS_PER_BLOCK];
+    correction_angles upper_[SCANS_PER_BLOCK];
   };
 
 

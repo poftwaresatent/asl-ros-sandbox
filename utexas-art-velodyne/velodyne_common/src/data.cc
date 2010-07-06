@@ -28,7 +28,6 @@
 #include <angles/angles.h>
 
 #include <velodyne/data.h>
-#include <velodyne/calibration.h>
 
 namespace velodyne
 {
@@ -62,15 +61,6 @@ namespace velodyne
       }
 
     ROS_INFO_STREAM("correction angles: " << anglesFile_);
-
-    // get format of angles.config file, switches calibration method
-    if (!private_nh.getParam("format", anglesFormat_))
-      {
-        // use "ART" as a default
-        anglesFormat_ = "ART";
-      }
-
-    ROS_INFO_STREAM("correction format: " << anglesFormat_);
 
     return 0;
   }
@@ -119,35 +109,66 @@ namespace velodyne
               }
           }
       }
-    
-    if (calibration_) {
-      delete calibration_;
-      calibration_ = NULL;
-    }
-    
-    if ("ART" == anglesFormat_) {
-      calibration_ = new CalibrationART();
-      int const status(calibration_->load(anglesFile_));
-      if (0 != status) {
-	ROS_ERROR ("CalibrationART::load(%s) returned %d", anglesFile_.c_str(), status);
-	return -1;
+
+    // read angles correction file for this specific unit
+    std::ifstream config(anglesFile_.c_str());
+    if (!config)
+      {
+        std::cerr << "Failure opening Velodyne angles correction file: " 
+                  << anglesFile_ << std::endl;
+        return -1;
       }
-    }
-    
-    else if ("ASL" == anglesFormat_) {
-      calibration_ = new CalibrationASL();
-      int const status(calibration_->load(anglesFile_));
-      if (0 != status) {
-	ROS_ERROR ("CalibrationASL::load(%s) returned %d", anglesFile_.c_str(), status);
-	return -1;
+  
+    int index = 0;
+    float rotational = 0;
+    float vertical = 0;
+    int enabled = 0;
+    float offset1=0;
+    float offset2=0;
+    float offset3=0;
+  
+    correction_angles * angles = 0;
+  
+    char buffer[256];
+    while(config.getline(buffer, sizeof(buffer)))
+      {
+        if (buffer[0] == '#') continue;
+        else if (strcmp(buffer, "upper") == 0)
+          continue;
+        else if(strcmp(buffer, "lower") == 0) 
+          continue;
+        else if(sscanf(buffer,"%d %f %f %f %f %f %d", &index, &rotational,
+                       &vertical, &offset1, &offset2, &offset3, &enabled) == 7)
+          {
+            int ind=index;
+            if (index < 32) 
+              angles=&lower_[0];
+            else
+              {
+                angles=&upper_[0];
+                ind=index-32;
+              }
+            angles[ind].rotational = angles::from_degrees(rotational);
+            angles[ind].vertical   = angles::from_degrees(vertical);
+            angles[ind].offset1 = offset1;
+            angles[ind].offset2 = offset2;
+            angles[ind].offset3 = offset3;
+            angles[ind].enabled = enabled;
+
+//#define DEBUG_ANGLES 1
+#ifdef DEBUG_ANGLES
+            ROS_DEBUG(stderr, "%d %.2f %.6f %.f %.f %.2f %d",
+                      index, rotational, vertical,
+                      angles[ind].offset1,
+                      angles[ind].offset2,
+                      angles[ind].offset3,
+                      angles[ind].enabled);
+#endif
+          }
       }
-    }
-    
-    else {
-      ROS_ERROR ("Invalid angles format `%s' (use ART or ASL)", anglesFormat_.c_str());
-      return -1;
-    }
-    
+
+    config.close();
+
     uninitialized_ = false;             // OK to start processing now
 
     return 0;

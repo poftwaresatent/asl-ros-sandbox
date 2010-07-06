@@ -1,0 +1,15 @@
+<package>
+  <description brief="asl_velodyne">
+
+     Velodyne conversion for the device used at the Autonomous Systems
+     Lab at ETH Zurich. Relies on the velodyne_common package from ART
+     autonomous vehicle, University of Texas at Austin.
+
+  </description>
+  <author>Roland Philippsen</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://www.asl.ethz.ch/</url>
+  <depend package="velodyne_common"/>
+
+</package>
