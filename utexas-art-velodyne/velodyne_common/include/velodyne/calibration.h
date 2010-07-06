@@ -33,18 +33,74 @@
 #define __VELODYNE_CALIBRATION_H
 
 namespace velodyne {
+
   
+  /** Conversion result type. 0 signifies success, values >0 are
+      warnings, values <0 are errors. */
+  typedef enum {
+    CVT_SUCCESS = 0,
+    CVT_TOO_CLOSE = 1,
+    CVT_TOO_FAR = 2,
+    CVT_NOT_INITIALIZED = -1,
+    CVT_INVALID_INDEX = -2
+  } cvt_result_t;
+  
+  
+  /**
+     Abstract interface for sensor calibration. Can be loaded from
+     file and performs raw-to-3D conversions (with correction) to
+     individual data points.
+  */
   class Calibration
   {
   public:
-    int load(std::string const & filename);
+    virtual ~Calibration() {}
     
-    int convert(uint16_t header_info,
-		uint16_t raw_rotation,
-		size_t block_index,
-		size_t ray_index,
-		uint16_t raw_distance,
-		double * px, double * py, double * pz) const;
+    /** Load calibration (correction) parameters from file. Returns 0
+	on success. */
+    virtual int load(std::string const & filename) = 0;
+    
+    /** Convert a single raw data point to its 3D position (sensor
+	frame). Applies the correction parameters loaded
+	previously. Returns 0 on success. */
+    virtual cvt_result_t convert(uint16_t header_info,
+				 uint16_t raw_rotation,
+				 size_t block_index,
+				 size_t ray_index,
+				 uint16_t raw_distance,
+				 double & px, double & py, double & pz) const = 0;
+  };
+
+
+  class CalibrationART
+    : public Calibration
+  {
+  public:
+    virtual int load(std::string const & filename);
+    
+    virtual cvt_result_t convert(uint16_t header_info,
+				 uint16_t raw_rotation,
+				 size_t block_index,
+				 size_t ray_index,
+				 uint16_t raw_distance,
+				 double & px, double & py, double & pz) const;
+
+  protected:
+  };
+  
+  
+  class CalibrationASL
+    : public Calibration
+  {
+  public:
+    virtual int load(std::string const & filename);
+    
+    virtual cvt_result_t convert(uint16_t header_info,
+				 uint16_t raw_rotation,
+				 size_t block_index,
+				 size_t ray_index,
+				 uint16_t raw_distance,
+				 double & px, double & py, double & pz) const;
     
   protected:
     struct corr_s {

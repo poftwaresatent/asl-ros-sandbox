@@ -125,21 +125,24 @@ namespace velodyne
    * time stamp, sequence number, and frame ID.
    */
   typedef void (*raw_callback_t)(const raw_packet_t *raw, size_t npackets);
-
+  
+  class Calibration;
+  
   /** \brief Base Velodyne data class -- not used directly. */
   class Data
   {
   public:
     Data(std::string ofile="",
-         std::string anglesFile="")
+         std::string anglesFile="",
+	 std::string anglesFormat="ART")
       {
         ofile_ = ofile;
         anglesFile_ = anglesFile;
+        anglesFormat_ = anglesFormat;
 
         ofp_ = NULL;
         rawCB_ = NULL;
-        memset(&upper_, 0, sizeof(upper_));
-        memset(&lower_, 0, sizeof(lower_));
+	calibration_ = NULL;
       }
 
     virtual ~Data() {}
@@ -243,6 +246,7 @@ namespace velodyne
     /** configuration parameters */
     std::string ofile_;                 ///< output file name for print()
     std::string anglesFile_;            ///< correction angles file name
+    std::string anglesFormat_;		///< format of angles file ("ART" or "ASL" for now)
 
     /** runtime state */
     FILE *ofp_;                         ///< output file descriptor

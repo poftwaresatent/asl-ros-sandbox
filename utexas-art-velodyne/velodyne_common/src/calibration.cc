@@ -33,7 +33,73 @@
 
 namespace velodyne {
   
-  int Calibration::load(std::string const & filename)
+  
+  int CalibrationART::load(std::string const & filename)
+  {
+    // read angles correction file for this specific unit
+    std::ifstream config(filename.c_str());
+    if (!config)
+      {
+        std::cerr << "Failure opening Velodyne angles correction file: " 
+                  << filename << std::endl;
+        return -1;
+      }
+  
+    int index = 0;
+    float rotational = 0;
+    float vertical = 0;
+    int enabled = 0;
+    float offset1=0;
+    float offset2=0;
+    float offset3=0;
+  
+    correction_angles * angles = 0;
+  
+    char buffer[256];
+    while(config.getline(buffer, sizeof(buffer)))
+      {
+        if (buffer[0] == '#') continue;
+        else if (strcmp(buffer, "upper") == 0)
+          continue;
+        else if(strcmp(buffer, "lower") == 0) 
+          continue;
+        else if(sscanf(buffer,"%d %f %f %f %f %f %d", &index, &rotational,
+                       &vertical, &offset1, &offset2, &offset3, &enabled) == 7)
+          {
+            int ind=index;
+            if (index < 32) 
+              angles=&lower_[0];
+            else
+              {
+                angles=&upper_[0];
+                ind=index-32;
+              }
+            angles[ind].rotational = angles::from_degrees(rotational);
+            angles[ind].vertical   = angles::from_degrees(vertical);
+            angles[ind].offset1 = offset1;
+            angles[ind].offset2 = offset2;
+            angles[ind].offset3 = offset3;
+            angles[ind].enabled = enabled;
+
+//#define DEBUG_ANGLES 1
+#ifdef DEBUG_ANGLES
+            ROS_DEBUG(stderr, "%d %.2f %.6f %.f %.f %.2f %d",
+                      index, rotational, vertical,
+                      angles[ind].offset1,
+                      angles[ind].offset2,
+                      angles[ind].offset3,
+                      angles[ind].enabled);
+#endif
+          }
+      }
+
+    config.close();
+
+    return 0;
+  }
+  
+  
+  int CalibrationASL::load(std::string const & filename)
   {
     std::ifstream config(filename.c_str());
     if ( ! config) {
@@ -55,27 +121,35 @@ namespace velodyne {
   }
   
   
-  int Calibration::convert(uint16_t header_info,
-			   uint16_t raw_rotation,
-			   size_t block_index,
-			   size_t ray_index,
-			   uint16_t raw_distance,
-			   double * px, double * py, double * pz) const
+  int CalibrationASL::convert(uint16_t header_info,
+			      uint16_t raw_rotation,
+			      size_t block_index,
+			      size_t ray_index,
+			      uint16_t raw_distance,
+			      double & px, double & py, double & pz) const
   {
     if (ray_index >= db_.size()) {
       if (db_.empty()) {
-	return -1;		// not initialized, call load()
+	return CVT_NOT_INITIALIZED;
       }
-      return -2;		// invalid index
+      return CVT_INVALID_INDEX;
     }
+    
+    if (0 == raw_distance) {
+      px = 0;
+      py = 0;
+      pz = 0;
+      return CVT_TOO_FAR;
+    }
+    
     corr_s const & corr(db_[ray_index]);
     
     double const dist_m(2e-3 * raw_distance + corr.dist);
     if (dist_m <= 0.9) {
-      *px = 0;
-      *py = 0;
-      *pz = 0;
-      return 1;			// out of range (too close)
+      px = 0;
+      py = 0;
+      pz = 0;
+      return CVT_TOO_CLOSE;
     }
     
     // XXXX to do: cache these...
@@ -93,13 +167,17 @@ namespace velodyne {
     // sin(a-b) = sin(a)*cos(b) - cos(a)*sin(b)
     double const cosRay(cosRaw * cosRot + sinRaw * sinRot);
     double const sinRay(sinRaw * cosRot - cosRaw * sinRot);
-
-#error dude
     
+    double const xy_dist_m(dist_m * cosVert - corr.vertOff * sinVert);
+    px = xy_dist_m * sinRay - corr.horizOff * cosRay;
+    py = xy_dist_m * cosRay + corr.horizOff * sinRay;
+    pz = dist_m * sinVert + corr.vertOff * cosVert;
+    
+    return CVT_SUCCESS;
   }
   
   
-  std::istream & Calibration::corr_s::operator >> (std::istream & is)
+  std::istream & CalibrationASL::corr_s::operator >> (std::istream & is)
   {
     double rot_, vert_, dist_, vertOff_, horizOff_;
     is >> rot_ >> vert_ >> dist_ >> vertOff_ >> horizOff_;
