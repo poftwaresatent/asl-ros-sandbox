@@ -29,11 +29,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __VELODYNE_CALIBRATION_H
-#define __VELODYNE_CALIBRATION_H
+#ifndef ASL_VELODYNE_CALIBRATION_H
+#define ASL_VELODYNE_CALIBRATION_H
 
-namespace velodyne {
+#include <string>
+#include <vector>
+#include <stdint.h>
 
+namespace asl_velodyne {
+  
   
   /** Conversion result type. 0 signifies success, values >0 are
       warnings, values <0 are errors. */
@@ -45,74 +49,28 @@ namespace velodyne {
     CVT_INVALID_INDEX = -2
   } cvt_result_t;
   
+  struct corr_s {
+    corr_s()
+      : rot(0), vert(0), dist(0), vertOff(0), horizOff(0) {}
+    
+    // angles in rad, distances in m
+    double rot, vert, dist, vertOff, horizOff;
+  };
   
-  /**
-     Abstract interface for sensor calibration. Can be loaded from
-     file and performs raw-to-3D conversions (with correction) to
-     individual data points.
-  */
+  
   class Calibration
   {
   public:
-    virtual ~Calibration() {}
+    int load(std::string const & filename);
     
-    /** Load calibration (correction) parameters from file. Returns 0
-	on success. */
-    virtual int load(std::string const & filename) = 0;
-    
-    /** Convert a single raw data point to its 3D position (sensor
-	frame). Applies the correction parameters loaded
-	previously. Returns 0 on success. */
-    virtual cvt_result_t convert(uint16_t header_info,
-				 uint16_t raw_rotation,
-				 size_t block_index,
-				 size_t ray_index,
-				 uint16_t raw_distance,
-				 double & px, double & py, double & pz) const = 0;
-  };
-
-
-  class CalibrationART
-    : public Calibration
-  {
-  public:
-    virtual int load(std::string const & filename);
-    
-    virtual cvt_result_t convert(uint16_t header_info,
-				 uint16_t raw_rotation,
-				 size_t block_index,
-				 size_t ray_index,
-				 uint16_t raw_distance,
-				 double & px, double & py, double & pz) const;
-
-  protected:
-  };
-  
-  
-  class CalibrationASL
-    : public Calibration
-  {
-  public:
-    virtual int load(std::string const & filename);
-    
-    virtual cvt_result_t convert(uint16_t header_info,
-				 uint16_t raw_rotation,
-				 size_t block_index,
-				 size_t ray_index,
-				 uint16_t raw_distance,
-				 double & px, double & py, double & pz) const;
+    cvt_result_t convert(uint16_t header_info,
+			 uint16_t raw_rotation,
+			 size_t block_index,
+			 size_t ray_index,
+			 uint16_t raw_distance,
+			 double & px, double & py, double & pz) const;
     
   protected:
-    struct corr_s {
-      corr_s()
-	: rot(0), vert(0), dist(0), vertOff(0), horizOff(0) {}
-      
-      std::istream & operator >> (std::istream & is);
-      
-      // angles in rad, distances in m
-      double rot, vert, dist, vertOff, horizOff;
-    };
-    
     typedef std::vector<corr_s> db_t;
     
     db_t db_;
@@ -120,4 +78,10 @@ namespace velodyne {
   
 }
 
-#endif // __VELODYNE_CALIBRATION_H
+
+namespace std {
+  istream & operator >> (istream & is, asl_velodyne::corr_s & corr);
+}
+
+
+#endif // ASL_VELODYNE_CALIBRATION_H

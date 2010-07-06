@@ -29,77 +29,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <velodyne/calibration.h>
+#include <asl_velodyne/calibration.h>
+#include <fstream>
+#include <cmath>
 
-namespace velodyne {
+namespace asl_velodyne {
   
   
-  int CalibrationART::load(std::string const & filename)
-  {
-    // read angles correction file for this specific unit
-    std::ifstream config(filename.c_str());
-    if (!config)
-      {
-        std::cerr << "Failure opening Velodyne angles correction file: " 
-                  << filename << std::endl;
-        return -1;
-      }
-  
-    int index = 0;
-    float rotational = 0;
-    float vertical = 0;
-    int enabled = 0;
-    float offset1=0;
-    float offset2=0;
-    float offset3=0;
-  
-    correction_angles * angles = 0;
-  
-    char buffer[256];
-    while(config.getline(buffer, sizeof(buffer)))
-      {
-        if (buffer[0] == '#') continue;
-        else if (strcmp(buffer, "upper") == 0)
-          continue;
-        else if(strcmp(buffer, "lower") == 0) 
-          continue;
-        else if(sscanf(buffer,"%d %f %f %f %f %f %d", &index, &rotational,
-                       &vertical, &offset1, &offset2, &offset3, &enabled) == 7)
-          {
-            int ind=index;
-            if (index < 32) 
-              angles=&lower_[0];
-            else
-              {
-                angles=&upper_[0];
-                ind=index-32;
-              }
-            angles[ind].rotational = angles::from_degrees(rotational);
-            angles[ind].vertical   = angles::from_degrees(vertical);
-            angles[ind].offset1 = offset1;
-            angles[ind].offset2 = offset2;
-            angles[ind].offset3 = offset3;
-            angles[ind].enabled = enabled;
-
-//#define DEBUG_ANGLES 1
-#ifdef DEBUG_ANGLES
-            ROS_DEBUG(stderr, "%d %.2f %.6f %.f %.f %.2f %d",
-                      index, rotational, vertical,
-                      angles[ind].offset1,
-                      angles[ind].offset2,
-                      angles[ind].offset3,
-                      angles[ind].enabled);
-#endif
-          }
-      }
-
-    config.close();
-
-    return 0;
-  }
-  
-  
-  int CalibrationASL::load(std::string const & filename)
+  int Calibration::
+  load(std::string const & filename)
   {
     std::ifstream config(filename.c_str());
     if ( ! config) {
@@ -121,12 +59,13 @@ namespace velodyne {
   }
   
   
-  int CalibrationASL::convert(uint16_t header_info,
-			      uint16_t raw_rotation,
-			      size_t block_index,
-			      size_t ray_index,
-			      uint16_t raw_distance,
-			      double & px, double & py, double & pz) const
+  cvt_result_t Calibration::
+  convert(uint16_t header_info,
+	  uint16_t raw_rotation,
+	  size_t block_index,
+	  size_t ray_index,
+	  uint16_t raw_distance,
+	  double & px, double & py, double & pz) const
   {
     if (ray_index >= db_.size()) {
       if (db_.empty()) {
@@ -160,8 +99,8 @@ namespace velodyne {
     
     // XXXX could conceivably have a lookup table for these...
     double const raw_angle(raw_rotation * 1e-2 * M_PI / 180); // centi-degrees to radians
-    double const cosRaw(cos(ray_angle));
-    double const sinRaw(sin(ray_angle));
+    double const cosRaw(cos(raw_angle));
+    double const sinRaw(sin(raw_angle));
 
     // cos(a-b) = cos(a)*cos(b) + sin(a)*sin(b)
     // sin(a-b) = sin(a)*cos(b) - cos(a)*sin(b)
@@ -176,19 +115,22 @@ namespace velodyne {
     return CVT_SUCCESS;
   }
   
-  
-  std::istream & CalibrationASL::corr_s::operator >> (std::istream & is)
+}
+
+namespace std {
+
+  istream & operator >> (istream & is, asl_velodyne::corr_s & corr)
   {
-    double rot_, vert_, dist_, vertOff_, horizOff_;
-    is >> rot_ >> vert_ >> dist_ >> vertOff_ >> horizOff_;
+    double rot, vert, dist, vertOff, horizOff;
+    is >> rot >> vert >> dist >> vertOff >> horizOff;
     if (is) {
-      rot = rot_ * M_PI / 180;	// deg to rad
-      vert = vert_ * M_PI / 180; // deg to rad
-      dist = dist_ * 1e-2;	 // cm to m
-      vertOff = vertOff_ * 1e-2; // cm to m
-      horizOff = horizOff_ * 1e-2; // cm to m
+      corr.rot = rot * M_PI / 180;	// deg to rad
+      corr.vert = vert * M_PI / 180; // deg to rad
+      corr.dist = dist * 1e-2;	 // cm to m
+      corr.vertOff = vertOff * 1e-2; // cm to m
+      corr.horizOff = horizOff * 1e-2; // cm to m
     }
     return is;
   }
-
+  
 }
