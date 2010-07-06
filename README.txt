@@ -37,7 +37,7 @@ Examples used for a high-level walkthrough of ROS:
 - service client with GUI implemented in Python with Tix
 - example on-the-fly graphical visualization (rxplot)
 
-See link:asltutorial/mainpage.dox[asltutorial/mainpage.dox] for more info.
+See asltutorial/mainpage.dox for more info.
 
 
 Contents of the +winch_action+ Directory
@@ -52,7 +52,7 @@ complex. Shows an important difference between simple and non-simple
 servers, the latter are much more useful (otherwise you might almost
 just prefer to use service servers).
 
-See link:winch_action/mainpage.dox[winch_action/mainpage.dox] for more info.
+See winch_action/mainpage.dox for more info.
 
 
 Contents of the +non_simple_action+ Directory
@@ -63,7 +63,7 @@ and clients, in Python and C+\+. At the time of writing, not all was
 well with the non-simple versions of action clients in C++ and
 Python. The servers seemed to behave as expected though.
 
-See link:non_simple_action/mainpage.dox[non_simple_action/mainpage.dox] for more info.
+See non_simple_action/mainpage.dox for more info.
 
 
 Contents of the +pingpong+ Directory
@@ -75,7 +75,7 @@ pings and sends back the same sequence number.  Both sides publish
 stats which summarize the difference between sent and received
 sequence numbers.
 
-See link:pingpong/mainpage.dox[pingpong/mainpage.dox] for more info.
+See pingpong/mainpage.dox for more info.
 
 
 Contents of the +tpcloud+ Directory
@@ -85,7 +85,7 @@ A tool for testing your point cloud visualization. It is essentially
 aimed at debugging your rviz setup, by sending 3D point clouds whose
 shape is known.
 
-See link:tpcloud/mainpage.dox[tpcloud/mainpage.dox] for more info.
+See tpcloud/mainpage.dox for more info.
 
 
 Contents of the +utexas-art-velodyne+ Directory
