@@ -37,13 +37,16 @@
 #include <err.h>
 
 static std::string default_calibfile(""); // constructed at runtime using pkg path
-static int const default_qdepth(1);
+static int const default_in_qdepth(1);
+static int const default_out_qdepth(260);
 
 static std::string calibfile("");
 static std::string raw_topic("velodyne/rawscan"); // XXXX to do: add an option to change this
 static std::string pc_topic("asl_velodyne/pointcloud"); // XXXX to do: add an option to change this
 static bool restamp(false);
-static int qdepth(default_qdepth);
+static int in_qdepth(default_in_qdepth);
+static int out_qdepth(default_out_qdepth);
+static bool verbose(false);
 
 static ros::Subscriber raw_sub;
 static ros::Publisher pc_pub;
@@ -57,10 +60,12 @@ static void usage(char const * msg, int exitcode)
        "%s\n"
        "Convert raw Velodyne scans to PointClouds\n"
        "\t-h            print usage message\n"
+       "\t-v            verbose operation\n"
        "\t-n            re-stamp messages with ros::Time::now()\n"
        "\t-f <filename> calibration file (default: %s)\n"
-       "\t-q <integer>  set ROS topic queue depth (default: %d)\n",
-       msg, default_calibfile.c_str(), default_qdepth);
+       "\t-q <integer>  set output queue depth (default: %d)\n"
+       "\t-Q <integer>  set input queue depth (default: %d)\n",
+       msg, default_calibfile.c_str(), default_out_qdepth, default_in_qdepth);
 }
 
 
@@ -70,11 +75,15 @@ void parse_options(int argc, char ** argv)
   default_calibfile = prefix + "/etc/calibration.txt";
   
   char ch;
-  const char* optflags = "hnf:q:";
+  const char* optflags = "hvnf:q:Q:";
   while (-1 != (ch = getopt(argc, argv, optflags))) {
     switch(ch) {
     case 'h':
       usage("usage", EXIT_SUCCESS);
+    case 'v':
+      verbose = true;
+      ROS_INFO("verbose mode");
+      break;
     case 'n':
       restamp = true;
       ROS_INFO("restamping messages");
@@ -84,10 +93,16 @@ void parse_options(int argc, char ** argv)
       ROS_INFO("calibration file %s", calibfile.c_str());
       break;
     case 'q':
-      qdepth = atoi(optarg);
-      if (qdepth < 1)
-	qdepth = 1;
-      ROS_INFO("queue depth %d", qdepth);
+      out_qdepth = atoi(optarg);
+      if (out_qdepth < 1)
+	out_qdepth = 1;
+      ROS_INFO("output queue depth %d", out_qdepth);
+      break;
+    case 'Q':
+      in_qdepth = atoi(optarg);
+      if (in_qdepth < 1)
+	in_qdepth = 1;
+      ROS_INFO("input queue depth %d", in_qdepth);
       break;
     default:
       usage("invalid option", EXIT_FAILURE);
@@ -100,29 +115,28 @@ void parse_options(int argc, char ** argv)
 }
 
 
-static void raw_cb(velodyne_common::RawScan::ConstPtr const & raw)
+/** \return The number of points in the published pointcloud
+    message. Errors are signaled via ros::shutdown(), which you can
+    test by calling ros::ok(). */
+static size_t convert_packet(roslib::Header const & msg_header,
+			     uint8_t const * packet)
 {
-  if (1206 != raw->data.size()) {
-    ROS_ERROR ("unexpected raw data size (%zu instead of 1206)",
-	       raw->data.size());
-    ros::shutdown();
-    return;
-  }
-  
   pc_msg.points.resize(12 * 32); // make space for max number of pts
   size_t nvalid(0);		 // keep track of how many are valid
-  for (size_t iblock(0); iblock < 12; ++iblock) {
-    uint8_t const * block(&raw->data[iblock * 100]);
+  uint8_t const * block(packet);
+  for (size_t iblock(0); iblock < 12; ++iblock, block += 100) {
     
     size_t ray_begin, ray_end;
     uint16_t const header(*reinterpret_cast<uint16_t const *>(block));
     if (header == 0xEEFF) {
       // UPPER: from 0 to 31
+      // ROS_DEBUG ("block %zu is UPPER", iblock);
       ray_begin = 0;
       ray_end = 32;
     }
     else if (header == 0xDDFF) {
       // LOWER: from 32 to 63
+      // ROS_DEBUG ("block %zu is LOWER", iblock);
       ray_begin = 32;
       ray_end = 64;
     }
@@ -130,18 +144,18 @@ static void raw_cb(velodyne_common::RawScan::ConstPtr const & raw)
       ROS_ERROR ("unexpected header 0x%4X in block %zu",
 		 header, iblock);
       ros::shutdown();
-      return;
+      return 0;
     }
     
     double const raw_angle(calib.cdeg_to_rad(*reinterpret_cast<uint16_t const *>(block + 2)));
     uint16_t const * raw_dist(reinterpret_cast<uint16_t const *>(block + 4));
-    for (size_t iray(ray_begin); iray < ray_end; ++iray) {
+    for (size_t iray(ray_begin); iray < ray_end; ++iray, raw_dist += 3) {
       double px, py, pz;
       int const status(calib.convert(raw_angle, iray, *raw_dist, px, py, pz));
       if (0 > status) {
-	ROS_ERROR ("conversion failed for ray %zu in block %zu (error code %d)", iray - ray_begin, iblock);
+	ROS_ERROR ("conversion failed for ray %zu in block %zu (error code %d)", iray - ray_begin, iblock, status);
 	ros::shutdown();
-	return;
+	return 0;
       }
       else if (0 == status) {
 	pc_msg.points[nvalid].x = px;
@@ -149,21 +163,53 @@ static void raw_cb(velodyne_common::RawScan::ConstPtr const & raw)
 	pc_msg.points[nvalid].z = pz;
 	++nvalid;
       }
-      // else too close or too far, don't add it to point cloud
+      // else {
+      // 	ROS_DEBUG ("range too close or too far (code %d)", status);
+      // }
     }
+    // ROS_DEBUG ("block %zu nvalid %zu", iblock, nvalid);
   }
   
   if (0 == nvalid) {
-    ROS_WARN ("no valid points in raw scan");
-    return;
+    // ROS_DEBUG ("no valid points in raw scan");
+    return 0;
   }
   
-  pc_msg.header = raw->header;
+  pc_msg.header = msg_header;
   if (restamp) {
     pc_msg.header.stamp = ros::Time::now();
   }
   pc_msg.points.resize(nvalid);	// trim message down to actual nunmber of points
   pc_pub.publish(pc_msg);
+  
+  return nvalid;
+}
+
+
+static void raw_cb(velodyne_common::RawScan::ConstPtr const & raw)
+{
+  if (raw->data.size() % 1206 != 0) {
+    ROS_ERROR ("raw data size %zu is not an integer multiple of 1206)",
+	       raw->data.size());
+    ros::shutdown();
+    return;
+  }
+  
+  size_t const npackets(raw->data.size() / 1206);
+  uint8_t const * packet(&raw->data[0]);
+  size_t ttnvalid(0);
+  for (size_t ipacket(0); ipacket < npackets; ++ipacket, packet += 1206) {
+    size_t nvalid(convert_packet(raw->header, packet));
+    if ( ! ros::ok()) {
+      ROS_ERROR ("problem occurred in packet %zu of %zu", ipacket, npackets);
+      return;
+    }
+    ttnvalid += nvalid;
+  }
+  
+  if (verbose) {
+    ROS_INFO ("published %zu points from %zu packets", ttnvalid, npackets);
+  }
 }
 
 
@@ -180,8 +226,9 @@ int main(int argc, char ** argv)
   }
   
   ros::NodeHandle nh;
-  raw_sub = nh.subscribe(raw_topic, qdepth, raw_cb, ros::TransportHints().tcpNoDelay(true));
-  pc_pub = nh.advertise<sensor_msgs::PointCloud>(pc_topic, qdepth);
+  raw_sub = nh.subscribe(raw_topic, in_qdepth, raw_cb,
+			 ros::TransportHints().tcpNoDelay(true));
+  pc_pub = nh.advertise<sensor_msgs::PointCloud>(pc_topic, out_qdepth);
   
   ros::spin();
 }

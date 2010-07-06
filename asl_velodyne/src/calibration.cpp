@@ -30,6 +30,7 @@
  */
 
 #include <asl_velodyne/calibration.h>
+#include <ros/console.h>
 #include <fstream>
 
 
@@ -46,7 +47,7 @@ namespace asl_velodyne {
     
     db_t db;
     corr_s corr;
-    for (size_t ii(0); ii < 32; ++ii) {
+    for (size_t ii(0); ii < 64; ++ii) {
       config >> corr;
       if ( ! config) {
 	return -2;
@@ -67,8 +68,10 @@ namespace asl_velodyne {
   {
     if (ray_index >= db_.size()) {
       if (db_.empty()) {
+	ROS_ERROR ("asl_velodyne::Calibration::convert(): not initialized");
 	return CVT_NOT_INITIALIZED;
       }
+      ROS_ERROR ("asl_velodyne::Calibration::convert(): index %zu exceeds DB size %zu", ray_index, db_.size());
       return CVT_INVALID_INDEX;
     }
     
@@ -126,6 +129,10 @@ namespace std {
       corr.dist = dist * 1e-2;	 // cm to m
       corr.vertOff = vertOff * 1e-2; // cm to m
       corr.horizOff = horizOff * 1e-2; // cm to m
+      ROS_INFO ("asl_velodyne::corr_s  rot %f  vert %f  dist %f  vertOff %f  horizOff %f", corr.rot, corr.vert, corr.dist, corr.vertOff, corr.horizOff);
+    }
+    else {
+      ROS_ERROR ("failed to read asl_velodyne::corr_s entry");
     }
     return is;
   }
