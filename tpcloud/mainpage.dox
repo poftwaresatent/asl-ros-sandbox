@@ -5,7 +5,9 @@
 \b tpcloud is a tool for testing your point cloud visualization etc
 
 \section cube Cube in rviz
-<verbatim>
+
+<pre>
+
 * roscd tpcloud
   - ./bin/pcloudgen
 * roscd tf
@@ -14,6 +16,7 @@
   - fixed and target frame "/world"
   - add Point Cloud visualization
   - topic "/pcloudgen/cube"
-</verbatim>
+
+</pre>
 
 */

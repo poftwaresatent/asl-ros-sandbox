@@ -1,0 +1,39 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+<pre>
+
+ * scripts/server.py
+   A non-simple action server that manages as many counters as you
+   send it goals. Each counter counts (up or down) from a start to an
+   end value defined in the goal and sends feedback each time the
+   counter gets updated.
+
+ * scripts/client.py
+   A non-simple client that was supposed to test transition and
+   feedback callbacks, but they do not get called. Maybe an issue with
+   the actionlib implementation, Stu said they had not been tested
+   extensively...
+
+ * src/client.cpp
+   A non-simple counter client implemented in C++, but it fails to
+   connect to the server. With Andreas Breitenmoser (pipe inspection
+   robot) we worked around this similar issue by polling for the goal
+   state and re-sending the goal until receipt of an acknowledge from
+   the server, but it's not sure whether this can work here as
+   well. To be tried out...
+
+ * scripts/simple_client.py
+   A simple action client that is capable of connecting to the counter
+   server. Works like a charm, but cannot do the things that we would
+   want a client to do (such as monitoring feedback and maybe aborting
+   the goal on special occasions).
+
+ * src/simple_client.cpp
+   A simple client implemented in C++, which works just like the
+   Python version.
+
+</pre>
+
+*/

@@ -1,0 +1,6 @@
+int32 begin
+int32 end
+---
+int32 magic
+---
+int32 current

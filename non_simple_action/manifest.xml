@@ -1,16 +1,14 @@
 <package>
-  <description brief="winch_action">
+  <description brief="non_simple_action">
 
-    Actionlib server and client code written with Stephane Magnenat
-    during a one-day hackathon to learn actionlib in order to apply it
-    to the limnobotics project with Gregory Hitz.
+    Exploring the possibilities and limits of non-simple action
+    servers and clients, in Python and C++.
 
   </description>
   <author>Roland Philippsen</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://github.com/poftwaresatent/asl-ros-sandbox</url>
-  <depend package="roscpp"/>
   <depend package="rospy"/>
   <depend package="actionlib_msgs"/>
   <depend package="actionlib"/>
