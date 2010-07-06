@@ -102,6 +102,68 @@ void parse_options(int argc, char ** argv)
 
 static void raw_cb(velodyne_common::RawScan::ConstPtr const & raw)
 {
+  if (1206 != raw->data.size()) {
+    ROS_ERROR ("unexpected raw data size (%zu instead of 1206)",
+	       raw->data.size());
+    ros::shutdown();
+    return;
+  }
+  
+  pc_msg.points.resize(12 * 32); // make space for max number of pts
+  size_t nvalid(0);		 // keep track of how many are valid
+  for (size_t iblock(0); iblock < 12; ++iblock) {
+    uint8_t const * block(&raw->data[iblock * 100]);
+    
+    size_t ray_begin, ray_end;
+    uint16_t const header(*reinterpret_cast<uint16_t const *>(block));
+    if (header == 0xEEFF) {
+      // UPPER: from 0 to 31
+      ray_begin = 0;
+      ray_end = 32;
+    }
+    else if (header == 0xDDFF) {
+      // LOWER: from 32 to 63
+      ray_begin = 32;
+      ray_end = 64;
+    }
+    else {
+      ROS_ERROR ("unexpected header 0x%4X in block %zu",
+		 header, iblock);
+      ros::shutdown();
+      return;
+    }
+    
+    double const raw_angle(calib.cdeg_to_rad(*reinterpret_cast<uint16_t const *>(block + 2)));
+    uint16_t const * raw_dist(reinterpret_cast<uint16_t const *>(block + 4));
+    for (size_t iray(ray_begin); iray < ray_end; ++iray) {
+      double px, py, pz;
+      int const status(calib.convert(raw_angle, iray, *raw_dist, px, py, pz));
+      if (0 > status) {
+	ROS_ERROR ("conversion failed for ray %zu in block %zu (error code %d)", iray - ray_begin, iblock);
+	ros::shutdown();
+	return;
+      }
+      else if (0 == status) {
+	pc_msg.points[nvalid].x = px;
+	pc_msg.points[nvalid].y = py;
+	pc_msg.points[nvalid].z = pz;
+	++nvalid;
+      }
+      // else too close or too far, don't add it to point cloud
+    }
+  }
+  
+  if (0 == nvalid) {
+    ROS_WARN ("no valid points in raw scan");
+    return;
+  }
+  
+  pc_msg.header = raw->header;
+  if (restamp) {
+    pc_msg.header.stamp = ros::Time::now();
+  }
+  pc_msg.points.resize(nvalid);	// trim message down to actual nunmber of points
+  pc_pub.publish(pc_msg);
 }
 
 

@@ -35,6 +35,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <cmath>
 
 namespace asl_velodyne {
   
@@ -63,9 +64,12 @@ namespace asl_velodyne {
   public:
     int load(std::string const & filename);
     
-    cvt_result_t convert(uint16_t header_info,
-			 uint16_t raw_rotation,
-			 size_t block_index,
+    /** Convert an angle from centi-degrees to radians. Pass the
+	result as raw_angle argument to convert(). */
+    static double inline cdeg_to_rad(uint16_t cdeg_angle)
+    { return cdeg_angle * 1e-2 * M_PI / 180; }
+    
+    cvt_result_t convert(double raw_angle,
 			 size_t ray_index,
 			 uint16_t raw_distance,
 			 double & px, double & py, double & pz) const;

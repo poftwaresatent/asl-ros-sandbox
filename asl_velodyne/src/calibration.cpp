@@ -31,7 +31,7 @@
 
 #include <asl_velodyne/calibration.h>
 #include <fstream>
-#include <cmath>
+
 
 namespace asl_velodyne {
   
@@ -60,9 +60,7 @@ namespace asl_velodyne {
   
   
   cvt_result_t Calibration::
-  convert(uint16_t header_info,
-	  uint16_t raw_rotation,
-	  size_t block_index,
+  convert(double raw_angle,
 	  size_t ray_index,
 	  uint16_t raw_distance,
 	  double & px, double & py, double & pz) const
@@ -98,7 +96,6 @@ namespace asl_velodyne {
     double const sinVert(sin(corr.vert));
     
     // XXXX could conceivably have a lookup table for these...
-    double const raw_angle(raw_rotation * 1e-2 * M_PI / 180); // centi-degrees to radians
     double const cosRaw(cos(raw_angle));
     double const sinRaw(sin(raw_angle));
 
